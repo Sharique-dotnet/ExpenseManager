@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'theme.dart';
 
-/// App mark: Moss tile + name, after the Nook wordmark.
+/// App logo + name.
 class Wordmark extends StatelessWidget {
   const Wordmark({super.key});
 
@@ -11,16 +11,7 @@ class Wordmark extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 30,
-          height: 30,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: AppColors.moss, borderRadius: BorderRadius.circular(9)),
-          child: const Text(
-            '₹',
-            style: TextStyle(color: AppColors.white, fontSize: 17, fontWeight: FontWeight.w800, height: 1),
-          ),
-        ),
+        Image.asset('assets/images/logo.png', width: 32, height: 32, excludeFromSemantics: true),
         const SizedBox(width: Space.sm + 2),
         Text('Expense Manager', style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w800)),
       ],
