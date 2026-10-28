@@ -29,6 +29,7 @@ const expense = (overrides = {}) => ({
   amountPaise: 35000,
   occurredAt: Timestamp.now(),
   localDate: dayKey(new Date()),
+  paymentType: 'upi',
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp(),
   ...overrides,
@@ -104,6 +105,9 @@ describe('validation', () => {
     'extra ownership field': { uid: 'alice' },
     'client-chosen createdAt': { createdAt: Timestamp.now() },
     'localDate as string': { localDate: '2026-10-28' },
+    'empty payment type': { paymentType: '' },
+    'unknown payment type': { paymentType: 'paypal' },
+    'payment type label instead of key': { paymentType: 'Bank Transfer' },
   };
   for (const [name, overrides] of Object.entries(invalid)) {
     test(`rejects ${name}`, () => assertFails(setDoc(expenseRef(db('alice'), 'alice'), expense(overrides))));
@@ -142,6 +146,31 @@ describe('dates', () => {
     return assertFails(
       setDoc(expenseRef(db('alice'), 'alice'), expense({ occurredAt: Timestamp.fromDate(old), localDate: dayKey(old) })),
     );
+  });
+});
+
+describe('payment type', () => {
+  test('accepts each supported type', async () => {
+    for (const [i, type] of ['cash', 'upi', 'bank_transfer'].entries()) {
+      await assertSucceeds(setDoc(expenseRef(db('alice'), 'alice', `p${i}`), expense({ paymentType: type })));
+    }
+  });
+
+  test('rejects a new expense without one', async () => {
+    const { paymentType, ...legacy } = expense();
+    await assertFails(setDoc(expenseRef(db('alice'), 'alice'), legacy));
+  });
+
+  test('legacy docs stay readable and deletable, and editing them requires a type', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const { paymentType, ...legacy } = expense();
+      await setDoc(expenseRef(ctx.firestore(), 'alice'), { ...legacy, createdAt: Timestamp.now(), updatedAt: Timestamp.now() });
+    });
+    const ref = expenseRef(db('alice'), 'alice');
+    await assertSucceeds(getDoc(ref));
+    await assertFails(updateDoc(ref, { amountPaise: 100, updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(ref, { amountPaise: 100, paymentType: 'cash', updatedAt: serverTimestamp() }));
+    await assertSucceeds(deleteDoc(ref));
   });
 });
 

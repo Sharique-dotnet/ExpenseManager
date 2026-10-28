@@ -15,7 +15,7 @@ service cloud.firestore {
     }
 
     function isValidExpense(data) {
-      let fields = ['itemName', 'amountPaise', 'occurredAt', 'localDate', 'createdAt', 'updatedAt'];
+      let fields = ['itemName', 'amountPaise', 'occurredAt', 'localDate', 'paymentType', 'createdAt', 'updatedAt'];
       // localDate is the user's local calendar date. Rules only know UTC, so the
       // latest date that can legitimately be "today" anywhere is UTC+14.
       let latestLocalDate = dayKey(request.time + duration.value(14, 'h'));
@@ -34,6 +34,8 @@ service cloud.firestore {
         && data.localDate is int
         && data.localDate >= 20000101
         && data.localDate <= latestLocalDate
+        // Older docs may lack paymentType; they stay readable, but any write must set it.
+        && data.paymentType in ['cash', 'upi', 'bank_transfer']
         && data.updatedAt == request.time;
     }
 
