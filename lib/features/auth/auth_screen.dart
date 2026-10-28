@@ -53,6 +53,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _google() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      // On success AuthGate swaps this screen out.
+      if (await signInWithGoogle(ref.read(firebaseAuthProvider))) return;
+      if (mounted) setState(() => _busy = false);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = authErrorMessage(e);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
@@ -117,6 +136,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.white),
                               )
                             : Text(_signUp ? 'Create account' : 'Sign in'),
+                      ),
+                      const SizedBox(height: Space.lg),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: Space.md),
+                            child: Text('or', style: text.bodySmall),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: Space.lg),
+                      OutlinedButton.icon(
+                        onPressed: _busy ? null : _google,
+                        icon: const Text(
+                          'G',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF4285F4)),
+                        ),
+                        label: const Text('Continue with Google'),
                       ),
                       const SizedBox(height: Space.sm),
                       TextButton(

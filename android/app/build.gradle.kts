@@ -4,6 +4,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Google sign-in reads default_web_client_id, generated from google-services.json.
+// That file is gitignored (created by `flutterfire configure`), so builds without it
+// (e.g. emulator-only) skip the plugin and still work.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.eptatechnologies.expense_manager"
     compileSdk = flutter.compileSdkVersion

@@ -67,7 +67,7 @@ class TodayScreen extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () {
                   Navigator.pop(sheetContext);
-                  auth.signOut();
+                  signOut(auth);
                 },
                 icon: const Icon(Icons.logout_rounded),
                 label: const Text('Sign out'),

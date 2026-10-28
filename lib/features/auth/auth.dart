@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((_) => FirebaseAuth.instance);
 
@@ -20,7 +21,36 @@ String? validatePassword(String input) {
   return null;
 }
 
+Future<void>? _googleReady;
+
+/// Google account picker, then Firebase sign-in with its ID token.
+/// Returns false if the user closed the picker.
+Future<bool> signInWithGoogle(FirebaseAuth auth) async {
+  final google = GoogleSignIn.instance;
+  await (_googleReady ??= google.initialize());
+  try {
+    final account = await google.authenticate();
+    await auth.signInWithCredential(GoogleAuthProvider.credential(idToken: account.authentication.idToken));
+    return true;
+  } on GoogleSignInException catch (e) {
+    if (e.code == GoogleSignInExceptionCode.canceled) return false;
+    rethrow;
+  }
+}
+
+/// Signs out of Firebase and Google, so the account picker shows again next time.
+Future<void> signOut(FirebaseAuth auth) async {
+  await auth.signOut();
+  try {
+    await (_googleReady ??= GoogleSignIn.instance.initialize());
+    await GoogleSignIn.instance.signOut();
+  } catch (_) {
+    // Not signed in with Google, or Play services unavailable: nothing to clear.
+  }
+}
+
 String authErrorMessage(Object error) {
+  if (error is GoogleSignInException) return "Google sign-in didn't complete. Please try again.";
   if (error is! FirebaseAuthException) return 'Something went wrong. Please try again.';
   return switch (error.code) {
     'invalid-email' => 'That email address looks invalid.',
@@ -30,7 +60,8 @@ String authErrorMessage(Object error) {
     'weak-password' => 'Choose a stronger password (at least 6 characters).',
     'too-many-requests' => 'Too many attempts. Wait a moment and try again.',
     'network-request-failed' => 'No connection. Check your internet and try again.',
-    'operation-not-allowed' => 'Email sign-in is not enabled for this Firebase project.',
+    'operation-not-allowed' => 'This sign-in method is not enabled for this Firebase project.',
+    'account-exists-with-different-credential' => 'This email already has an account. Sign in with your password.',
     _ => error.message ?? 'Sign-in failed. Please try again.',
   };
 }
