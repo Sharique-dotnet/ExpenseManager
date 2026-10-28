@@ -45,6 +45,7 @@ users/{uid}/expenses/{expenseId}
   amountPaise: int        1 … 100000000 (₹0.01 … ₹10,00,000.00)
   occurredAt:  timestamp  when it happened (user-picked local date + time)
   localDate:   int        that local calendar date as yyyymmdd, e.g. 20261028
+  paymentType: string     cash | upi | bank_transfer (required on writes; older records may lack it and show "Not specified")
   createdAt:   timestamp  server time
   updatedAt:   timestamp  server time
 ```
