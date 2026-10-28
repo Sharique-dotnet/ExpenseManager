@@ -151,10 +151,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       const SizedBox(height: Space.lg),
                       OutlinedButton.icon(
                         onPressed: _busy ? null : _google,
-                        icon: const Text(
-                          'G',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF4285F4)),
-                        ),
+                        // Official mark from Google's sign-in branding assets.
+                        icon: Image.asset('assets/images/google_g.png', width: 20, height: 20),
                         label: const Text('Continue with Google'),
                       ),
                       const SizedBox(height: Space.sm),
