@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// Each user can only reach users/{their uid}/expenses. Limits mirror the app:
+// maxAmountPaise (lib/core/money.dart), maxItemNameLength (lib/features/expenses/expense.dart).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Timestamp → yyyymmdd, the same encoding as DayKey in the app.
+    function dayKey(t) {
+      return t.year() * 10000 + t.month() * 100 + t.day();
+    }
+
+    function isValidExpense(data) {
+      let fields = ['itemName', 'amountPaise', 'occurredAt', 'localDate', 'createdAt', 'updatedAt'];
+      // localDate is the user's local calendar date. Rules only know UTC, so the
+      // latest date that can legitimately be "today" anywhere is UTC+14.
+      let latestLocalDate = dayKey(request.time + duration.value(14, 'h'));
+      return data.keys().hasAll(fields)
+        && data.keys().hasOnly(fields)
+        && data.itemName is string
+        && data.itemName.trim().size() > 0
+        && data.itemName.size() <= 60
+        && data.amountPaise is int
+        && data.amountPaise > 0
+        && data.amountPaise <= 100000000
+        && data.occurredAt is timestamp
+        && data.occurredAt >= timestamp.date(2000, 1, 1)
+        // No future expenses; 10 minutes of slack for device clock drift.
+        && data.occurredAt <= request.time + duration.value(10, 'm')
+        && data.localDate is int
+        && data.localDate >= 20000101
+        && data.localDate <= latestLocalDate
+        && data.updatedAt == request.time;
+    }
+
+    match /users/{uid}/expenses/{expenseId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && isValidExpense(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(uid)
+        && isValidExpense(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+  }
+}

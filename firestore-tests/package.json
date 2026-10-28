@@ -1,0 +1,14 @@
+{
+  "name": "expense-manager-firestore-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-expense-manager --config ../firebase.json \"node --test\"",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-expense-manager --config ../firebase.json"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.1.0",
+    "firebase-tools": "^15.34.1"
+  }
+}
