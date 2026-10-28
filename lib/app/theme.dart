@@ -35,23 +35,23 @@ abstract final class Radii {
 }
 
 const _textTheme = TextTheme(
-  // Display 34 / 800
-  displaySmall: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -1.0, height: 1.1),
-  // Daily total 30 / 800
-  headlineLarge: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8, height: 1.1),
-  // Screen title 28 / 800
-  headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.7, height: 1.15),
-  // Section heading 18 / 700
-  titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.2),
-  // Title / amount 17 / 700
-  titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.2),
-  // Body 16 / 500 and 15 / 500
-  bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-  bodyMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-  // Caption 13 / 500
-  bodySmall: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-  // Button 16 / 600
-  labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  // Display 28 / 800
+  displaySmall: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -1.0, height: 1.1),
+  // Daily total 26 / 800
+  headlineLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.8, height: 1.1),
+  // Screen title 24 / 800
+  headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.7, height: 1.15),
+  // Section heading 17 / 700
+  titleLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.2),
+  // Title / amount 15 / 700
+  titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: -0.2),
+  // Body 15 / 500 and 14 / 500
+  bodyLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+  bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  // Caption 12 / 500
+  bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+  // Button 15 / 600
+  labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
   labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.2),
 );
 
@@ -111,7 +111,7 @@ ThemeData buildTheme() {
         foregroundColor: AppColors.white,
         disabledBackgroundColor: AppColors.moss.withValues(alpha: 0.45),
         disabledForegroundColor: AppColors.white,
-        minimumSize: const Size.fromHeight(52),
+        minimumSize: const Size.fromHeight(48),
         shape: buttonShape,
         textStyle: _textTheme.labelLarge,
       ).copyWith(overlayColor: const WidgetStatePropertyAll(AppColors.mossDark)),
@@ -140,8 +140,8 @@ ThemeData buildTheme() {
       elevation: 2,
       highlightElevation: 4,
       shape: CircleBorder(),
-      iconSize: 32,
-      sizeConstraints: BoxConstraints.tightFor(width: 64, height: 64),
+      iconSize: 28,
+      sizeConstraints: BoxConstraints.tightFor(width: 56, height: 56),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.background,

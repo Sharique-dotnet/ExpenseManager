@@ -40,7 +40,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xl + 40),
+        padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xl + 32),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(Space.xs, Space.sm, Space.xs, 0),
@@ -230,7 +230,7 @@ class CalendarDayCell extends StatelessWidget {
                 Text(
                   '${date.day}',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: isToday || isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: dayColor,
                   ),

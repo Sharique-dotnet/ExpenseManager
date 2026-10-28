@@ -88,7 +88,7 @@ class DayExpensesScaffold extends ConsumerWidget {
           count: list?.length ?? 0,
           totalPaise: list == null ? null : totalPaise(list),
           // Half the docked button plus its notch margin.
-          bottomClearance: addButtonInShell ? 40 : 0,
+          bottomClearance: addButtonInShell ? 32 : 0,
         ),
       ),
     );

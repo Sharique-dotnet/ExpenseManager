@@ -26,7 +26,7 @@ class DayDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(formatFullDate(dateOfKey(day)), style: text.headlineMedium!.copyWith(fontSize: 22)),
+                  Text(formatFullDate(dateOfKey(day)), style: text.headlineMedium!.copyWith(fontSize: 20)),
                   const SizedBox(height: 2),
                   Text('Daily expense summary', style: text.bodySmall),
                 ],

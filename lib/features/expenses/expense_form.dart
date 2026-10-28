@@ -203,39 +203,50 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                   validator: (v) => validateItemName(v ?? ''),
                 ),
                 const SizedBox(height: Space.md),
-                TextFormField(
-                  controller: _amount,
-                  enabled: !_saving,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  textInputAction: TextInputAction.done,
-                  inputFormatters: [
-                    TextInputFormatter.withFunction((old, next) => _amountInput.hasMatch(next.text) ? next : old),
-                  ],
-                  style: text.titleMedium,
-                  decoration: InputDecoration(
-                    labelText: 'Amount',
-                    hintText: '0.00',
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.only(left: Space.lg, right: Space.sm),
-                      child: Text('₹', style: text.titleMedium!.copyWith(color: AppColors.moss)),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _amount,
+                        enabled: !_saving,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          TextInputFormatter.withFunction((old, next) => _amountInput.hasMatch(next.text) ? next : old),
+                        ],
+                        style: text.titleMedium,
+                        decoration: InputDecoration(
+                          labelText: 'Amount',
+                          hintText: '0.00',
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(left: Space.lg, right: Space.sm),
+                            child: Text('₹', style: text.titleMedium!.copyWith(color: AppColors.moss)),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                        ),
+                        validator: (v) => validateAmount(v ?? ''),
+                        onFieldSubmitted: (_) => _save(),
+                      ),
                     ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-                  ),
-                  validator: (v) => validateAmount(v ?? ''),
-                  onFieldSubmitted: (_) => _save(),
-                ),
-                const SizedBox(height: Space.md),
-                DropdownButtonFormField<PaymentType>(
-                  initialValue: _paymentType,
-                  decoration: const InputDecoration(labelText: 'Payment type'),
-                  hint: const Text('Select'),
-                  borderRadius: BorderRadius.circular(Radii.input),
-                  dropdownColor: AppColors.white,
-                  items: [
-                    for (final type in PaymentType.values) DropdownMenuItem(value: type, child: Text(type.label)),
+                    const SizedBox(width: Space.md),
+                    Expanded(
+                      child: DropdownButtonFormField<PaymentType>(
+                        initialValue: _paymentType,
+                        decoration: const InputDecoration(labelText: 'Payment type'),
+                        hint: const Text('Select'),
+                        isExpanded: true,
+                        isDense: true,
+                        borderRadius: BorderRadius.circular(Radii.input),
+                        dropdownColor: AppColors.white,
+                        items: [
+                          for (final type in PaymentType.values) DropdownMenuItem(value: type, child: Text(type.label)),
+                        ],
+                        onChanged: _saving ? null : (type) => setState(() => _paymentType = type),
+                        validator: validatePaymentType,
+                      ),
+                    ),
                   ],
-                  onChanged: _saving ? null : (type) => setState(() => _paymentType = type),
-                  validator: validatePaymentType,
                 ),
                 const SizedBox(height: Space.md),
                 Row(

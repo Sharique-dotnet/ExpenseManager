@@ -88,8 +88,8 @@ class _HomeShellState extends State<HomeShell> {
             RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.card + 8))),
             CircleBorder(),
           ),
-          notchMargin: Space.sm,
-          height: 72,
+          notchMargin: 6,
+          height: 60,
           padding: EdgeInsets.zero,
           color: AppColors.white,
           surfaceTintColor: Colors.transparent,
@@ -106,7 +106,7 @@ class _HomeShellState extends State<HomeShell> {
                   onTap: () => _select(0),
                 ),
               ),
-              const SizedBox(width: 96), // room for the add button
+              const SizedBox(width: 80), // room for the add button
               Expanded(
                 child: _NavItem(
                   label: 'Calendar',
@@ -153,11 +153,11 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(selected ? selectedIcon : icon, color: color, size: 26),
-            const SizedBox(height: Space.xs),
+            Icon(selected ? selectedIcon : icon, color: color, size: 22),
+            const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: color),
+              style: TextStyle(fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: color),
             ),
           ],
         ),
