@@ -182,6 +182,9 @@ ThemeData buildTheme() {
       dialBackgroundColor: AppColors.mint,
       hourMinuteColor: AppColors.mint,
       hourMinuteTextColor: AppColors.mossDark,
+      dayPeriodColor: AppColors.mint,
+      dayPeriodTextColor: AppColors.mossDark,
+      dayPeriodBorderSide: BorderSide(color: AppColors.border),
     ),
     popupMenuTheme: PopupMenuThemeData(
       color: AppColors.white,

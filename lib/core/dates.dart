@@ -38,12 +38,19 @@ final _weekdayDayMonth = DateFormat('EEEE, d MMMM');
 final _fullDate = DateFormat('EEEE, d MMMM y');
 final _monthYear = DateFormat('MMMM y');
 final _month = DateFormat('MMMM');
-final _shortDate = DateFormat('EEE, d MMM y');
+final _weekdayDayShortMonth = DateFormat('EEE, d MMM');
+final _dayShortMonthYear = DateFormat('d MMM y');
 final _time = DateFormat('h:mm a');
 
 String formatWeekdayDayMonth(DateTime d) => _weekdayDayMonth.format(d); // Wednesday, 28 October
 String formatFullDate(DateTime d) => _fullDate.format(d); // Wednesday, 28 October 2026
 String formatMonthYear(DateTime d) => _monthYear.format(d); // October 2026
 String formatMonthName(DateTime d) => _month.format(d); // October
-String formatShortDate(DateTime d) => _shortDate.format(d); // Wed, 28 Oct 2026
 String formatTime(DateTime d) => _time.format(d); // 10:35 AM
+
+/// Short label for the form's date field: Today, Yesterday, Mon, 26 Oct, or 26 Oct 2025.
+String formatPickerDate(DateTime date, DateTime today) {
+  if (date == today) return 'Today';
+  if (date == DateTime(today.year, today.month, today.day - 1)) return 'Yesterday';
+  return date.year == today.year ? _weekdayDayShortMonth.format(date) : _dayShortMonthYear.format(date);
+}

@@ -30,43 +30,49 @@ class DayExpensesScaffold extends ConsumerWidget {
     final expenses = ref.watch(dayExpensesProvider(day));
     final list = expenses.value;
 
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            header,
-            Expanded(
-              child: list == null
-                  ? expenses.hasError
-                        ? ErrorState(
-                            message: "Couldn't load expenses.",
-                            details: describeError(expenses.error!),
-                            onRetry: () => ref.invalidate(dayExpensesProvider(day)),
-                          )
-                        : const Center(child: CircularProgressIndicator())
-                  : list.isEmpty
-                  ? EmptyState(title: emptyTitle)
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, 96),
-                      itemCount: list.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: Space.sm),
-                      itemBuilder: (_, i) => ExpenseTile(expense: list[i]),
-                    ),
-            ),
-          ],
+    // Own messenger so snackbars float above this screen's total panel,
+    // not above the shell's navigation bar (where they'd cover the total).
+    return ScaffoldMessenger(
+      child: Scaffold(
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              header,
+              Expanded(
+                child: list == null
+                    ? expenses.hasError
+                          ? ErrorState(
+                              message: "Couldn't load expenses.",
+                              details: describeError(expenses.error!),
+                              onRetry: () => ref.invalidate(dayExpensesProvider(day)),
+                            )
+                          : const Center(child: CircularProgressIndicator())
+                    : list.isEmpty
+                    ? EmptyState(title: emptyTitle)
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, 96),
+                        itemCount: list.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: Space.sm),
+                        itemBuilder: (_, i) => ExpenseTile(expense: list[i]),
+                      ),
+              ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Add expense',
-        onPressed: () => showExpenseForm(context, initialDate: dateOfKey(day)),
-        child: const Icon(Icons.add_rounded, size: 30),
-      ),
-      bottomNavigationBar: DailyTotalPanel(
-        label: totalLabel,
-        count: list?.length ?? 0,
-        totalPaise: list == null ? null : totalPaise(list),
+        floatingActionButton: Builder(
+          builder: (context) => FloatingActionButton(
+            tooltip: 'Add expense',
+            onPressed: () => showExpenseForm(context, initialDate: dateOfKey(day)),
+            child: const Icon(Icons.add_rounded, size: 30),
+          ),
+        ),
+        bottomNavigationBar: DailyTotalPanel(
+          label: totalLabel,
+          count: list?.length ?? 0,
+          totalPaise: list == null ? null : totalPaise(list),
+        ),
       ),
     );
   }
@@ -174,7 +180,9 @@ Future<void> confirmAndDelete(BuildContext context, WidgetRef ref, Expense expen
   try {
     final synced = await waitForServer(
       ref.read(expenseRepositoryProvider).delete(expense.id),
-      onLateError: (_) => messenger.showSnackBar(const SnackBar(content: Text("A deletion couldn't be synced."))),
+      onLateError: (_) {
+        if (messenger.mounted) messenger.showSnackBar(const SnackBar(content: Text("A deletion couldn't be synced.")));
+      },
     );
     messenger.showSnackBar(
       SnackBar(content: Text(synced ? 'Expense deleted' : 'Deleted on this device. Will sync when online.')),

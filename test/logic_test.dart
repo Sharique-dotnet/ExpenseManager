@@ -99,6 +99,18 @@ void main() {
       expect(sortedNewestFirst(expenses).map((e) => e.id), ['groceries', 'lunch', 'tea', 'bus', 'milk']);
     });
 
+    test('same-minute ties go to the most recently added', () {
+      final at = DateTime(2026, 10, 28, 18, 36);
+      Expense make(String id, DateTime? createdAt) =>
+          Expense(id: id, itemName: id, amountPaise: 1, occurredAt: at, localDate: 20261028, createdAt: createdAt);
+      final sorted = sortedNewestFirst([
+        make('a-first', DateTime(2026, 10, 28, 18, 36, 5)),
+        make('z-pending', null),
+        make('b-second', DateTime(2026, 10, 28, 18, 36, 40)),
+      ]);
+      expect(sorted.map((e) => e.id), ['z-pending', 'b-second', 'a-first']);
+    });
+
     test('groups by the stored localDate, not the instant', () {
       // Saved as 28 Oct in one timezone; must stay on 28 Oct wherever it is viewed.
       final e = Expense(
@@ -133,6 +145,15 @@ void main() {
       expect(monthRange(DateTime(2026, 12)), (20261201, 20261231));
       expect(DateTime(2026, 12 + 1), DateTime(2027, 1)); // next-month navigation
       expect(DateTime(2026, 1 - 1), DateTime(2025, 12)); // previous-month navigation
+    });
+
+    test('form date labels stay short', () {
+      final today = DateTime(2026, 10, 28);
+      expect(formatPickerDate(today, today), 'Today');
+      expect(formatPickerDate(DateTime(2026, 10, 27), today), 'Yesterday');
+      expect(formatPickerDate(DateTime(2026, 10, 26), today), 'Mon, 26 Oct');
+      expect(formatPickerDate(DateTime(2025, 12, 31), today), '31 Dec 2025');
+      expect(formatPickerDate(DateTime(2027, 1, 1), DateTime(2027, 1, 2)), 'Yesterday');
     });
 
     test('Monday-first leading blanks', () {

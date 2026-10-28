@@ -25,8 +25,9 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp(options: _useEmulator ? _emulatorOptions : DefaultFirebaseOptions.currentPlatform);
     if (_useEmulator) {
-      await FirebaseAuth.instance.useAuthEmulator(_emulatorHost, 9099);
-      FirebaseFirestore.instance.useFirestoreEmulator(_emulatorHost, 8080);
+      // Host is explicit, so FlutterFire must not rewrite 127.0.0.1 (adb reverse) to 10.0.2.2.
+      await FirebaseAuth.instance.useAuthEmulator(_emulatorHost, 9099, automaticHostMapping: false);
+      FirebaseFirestore.instance.useFirestoreEmulator(_emulatorHost, 8080, automaticHostMapping: false);
     }
   } catch (e) {
     runApp(_SetupErrorApp('$e'));

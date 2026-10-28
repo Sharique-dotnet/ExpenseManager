@@ -127,9 +127,13 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
     try {
       final confirmed = await waitForServer(
         _isEdit ? repo.update(_id, draft) : repo.create(_id, draft),
-        onLateError: (_) => messenger.showSnackBar(
-          const SnackBar(content: Text("An offline change couldn't be synced and was undone.")),
-        ),
+        onLateError: (_) {
+          if (messenger.mounted) {
+            messenger.showSnackBar(
+              const SnackBar(content: Text("An offline change couldn't be synced and was undone.")),
+            );
+          }
+        },
       );
       if (!mounted) return;
       Navigator.pop(
@@ -150,11 +154,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
     final text = Theme.of(context).textTheme;
     final today = dateOnly(DateTime.now());
     final timeError = validateOccurredAt(_occurredAt, DateTime.now());
-    final dateLabel = _date == today
-        ? 'Today'
-        : _date == DateTime(today.year, today.month, today.day - 1)
-        ? 'Yesterday'
-        : formatShortDate(_date);
+    final dateLabel = formatPickerDate(_date, today);
 
     return PopScope(
       canPop: !_saving,
@@ -218,19 +218,13 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _PickerField(
-                        label: 'Date',
-                        value: dateLabel,
-                        icon: Icons.calendar_today_rounded,
-                        onTap: _saving ? null : _pickDate,
-                      ),
+                      child: _PickerField(label: 'Date', value: dateLabel, onTap: _saving ? null : _pickDate),
                     ),
                     const SizedBox(width: Space.md),
                     Expanded(
                       child: _PickerField(
                         label: 'Time',
                         value: formatTime(_occurredAt),
-                        icon: Icons.schedule_rounded,
                         onTap: _saving ? null : _pickTime,
                         errorText: timeError,
                       ),
@@ -265,11 +259,10 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
 
 /// Tappable field that looks like a text input and opens a picker.
 class _PickerField extends StatelessWidget {
-  const _PickerField({required this.label, required this.value, required this.icon, this.onTap, this.errorText});
+  const _PickerField({required this.label, required this.value, this.onTap, this.errorText});
 
   final String label;
   final String value;
-  final IconData icon;
   final VoidCallback? onTap;
   final String? errorText;
 
@@ -283,12 +276,7 @@ class _PickerField extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(Radii.input),
         child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            prefixIcon: Icon(icon, size: 20, color: AppColors.moss),
-            errorText: errorText,
-            errorMaxLines: 2,
-          ),
+          decoration: InputDecoration(labelText: label, errorText: errorText, errorMaxLines: 2),
           child: Text(
             value,
             style: Theme.of(context).textTheme.bodyLarge,

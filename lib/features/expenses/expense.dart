@@ -12,6 +12,7 @@ class Expense {
     required this.amountPaise,
     required this.occurredAt,
     required this.localDate,
+    this.createdAt,
     this.pendingSync = false,
   });
 
@@ -20,6 +21,9 @@ class Expense {
   final int amountPaise;
   final DateTime occurredAt;
   final DayKey localDate;
+
+  /// Server creation time; null until a new write reaches the server.
+  final DateTime? createdAt;
 
   /// True while the write exists only in the local cache (offline / unacknowledged).
   final bool pendingSync;
@@ -33,6 +37,7 @@ class Expense {
       amountPaise: (data['amountPaise'] as num).toInt(),
       occurredAt: occurredAt,
       localDate: (data['localDate'] as num?)?.toInt() ?? dayKeyOf(occurredAt),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       pendingSync: doc.metadata.hasPendingWrites,
     );
   }
@@ -65,12 +70,17 @@ String? validateItemName(String input) {
 
 int totalPaise(Iterable<Expense> expenses) => expenses.fold(0, (total, e) => total + e.amountPaise);
 
-/// Newest first; ties broken by id so the order never flickers between snapshots.
-List<Expense> sortedNewestFirst(Iterable<Expense> expenses) => expenses.toList()
-  ..sort((a, b) {
+/// Newest first. Times are per-minute, so ties go to the most recently added
+/// (unsynced = just added), then id, so the order never flickers between snapshots.
+List<Expense> sortedNewestFirst(Iterable<Expense> expenses) {
+  final pending = DateTime(9999);
+  return expenses.toList()..sort((a, b) {
     final byTime = b.occurredAt.compareTo(a.occurredAt);
-    return byTime != 0 ? byTime : a.id.compareTo(b.id);
+    if (byTime != 0) return byTime;
+    final byCreated = (b.createdAt ?? pending).compareTo(a.createdAt ?? pending);
+    return byCreated != 0 ? byCreated : a.id.compareTo(b.id);
   });
+}
 
 /// Sum of amounts per local date. Days without expenses are absent.
 Map<DayKey, int> totalsByDay(Iterable<Expense> expenses) {
