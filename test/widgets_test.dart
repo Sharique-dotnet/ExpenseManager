@@ -40,7 +40,7 @@ void main() {
       });
 
   Future<void> choosePayment(WidgetTester tester, String label) async {
-    await tester.tap(find.byType(DropdownButtonFormField<PaymentType>));
+    await tester.tap(find.byKey(const Key('payment-field')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(label).last);
     await tester.pumpAndSettle();
@@ -230,7 +230,8 @@ void main() {
 
       await tester.tap(find.text('Lunch'));
       await tester.pumpAndSettle();
-      expect(find.text('Select'), findsOneWidget); // no type pre-selected
+      // No type pre-selected: the field shows only its label.
+      expect(find.descendant(of: find.byKey(const Key('payment-field')), matching: find.text('Cash')), findsNothing);
       await tester.tap(find.text('Save changes'));
       await tester.pumpAndSettle();
       expect(find.text('Select a payment type'), findsOneWidget);

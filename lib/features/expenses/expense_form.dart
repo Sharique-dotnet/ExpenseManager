@@ -231,19 +231,10 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                     ),
                     const SizedBox(width: Space.md),
                     Expanded(
-                      child: DropdownButtonFormField<PaymentType>(
-                        initialValue: _paymentType,
-                        decoration: const InputDecoration(labelText: 'Payment type'),
-                        hint: const Text('Select'),
-                        isExpanded: true,
-                        isDense: true,
-                        borderRadius: BorderRadius.circular(Radii.input),
-                        dropdownColor: AppColors.white,
-                        items: [
-                          for (final type in PaymentType.values) DropdownMenuItem(value: type, child: Text(type.label)),
-                        ],
-                        onChanged: _saving ? null : (type) => setState(() => _paymentType = type),
-                        validator: validatePaymentType,
+                      child: _PaymentTypeField(
+                        value: _paymentType,
+                        enabled: !_saving,
+                        onChanged: (type) => setState(() => _paymentType = type),
                       ),
                     ),
                   ],
@@ -322,4 +313,73 @@ class _PickerField extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Payment type picker. Its menu opens directly below the field at exactly the
+/// field's width (Flutter's stock dropdown overlays the field and can overflow it).
+class _PaymentTypeField extends FormField<PaymentType> {
+  _PaymentTypeField({required PaymentType? value, required bool enabled, required ValueChanged<PaymentType?> onChanged})
+    : super(
+        key: const Key('payment-field'),
+        initialValue: value,
+        validator: validatePaymentType,
+        builder: (state) {
+          final context = state.context;
+          Future<void> open() async {
+            // Close the keyboard first so the menu has room below the field.
+            FocusScope.of(context).unfocus();
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            if (!state.mounted) return;
+            final box = state.context.findRenderObject()! as RenderBox;
+            final overlay = Navigator.of(state.context).overlay!.context.findRenderObject()! as RenderBox;
+            final topLeft = box.localToGlobal(Offset.zero, ancestor: overlay);
+            final field = Rect.fromLTWH(topLeft.dx, topLeft.dy + box.size.height + 4, box.size.width, 0);
+            final picked = await showMenu<PaymentType>(
+              context: state.context,
+              position: RelativeRect.fromRect(field, Offset.zero & overlay.size),
+              constraints: BoxConstraints.tightFor(width: box.size.width),
+              color: AppColors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.input)),
+              items: [
+                for (final type in PaymentType.values)
+                  PopupMenuItem(
+                    value: type,
+                    height: 40,
+                    child: Text(
+                      type.label,
+                      style: TextStyle(fontWeight: type == state.value ? FontWeight.w700 : FontWeight.w500),
+                    ),
+                  ),
+              ],
+            );
+            if (picked == null) return;
+            state.didChange(picked);
+            onChanged(picked);
+          }
+
+          final text = Theme.of(context).textTheme;
+          return Semantics(
+            button: true,
+            label: 'Payment type, ${paymentLabel(state.value)}',
+            excludeSemantics: true,
+            child: InkWell(
+              onTap: enabled ? open : null,
+              borderRadius: BorderRadius.circular(Radii.input),
+              child: InputDecorator(
+                isEmpty: state.value == null,
+                decoration: InputDecoration(
+                  labelText: 'Payment',
+                  errorText: state.errorText,
+                  suffixIcon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.textSecondary),
+                ),
+                // Empty until chosen; the label doubles as the placeholder, like Item and Amount.
+                child: state.value == null
+                    ? const SizedBox.shrink()
+                    : Text(state.value!.label, style: text.bodyLarge, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          );
+        },
+      );
 }
