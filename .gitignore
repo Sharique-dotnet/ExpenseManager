@@ -53,3 +53,6 @@ app.*.map.json
 .firebaserc
 *-debug.log
 firestore-tests/node_modules/
+
+# Built APKs for sharing
+/dist/
