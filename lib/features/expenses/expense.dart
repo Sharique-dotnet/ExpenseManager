@@ -5,6 +5,31 @@ import '../../core/dates.dart';
 /// Max item name length. Mirrored in firestore.rules.
 const maxItemNameLength = 60;
 
+/// How an expense was paid. [stored] values are mirrored in firestore.rules.
+enum PaymentType {
+  cash('cash', 'Cash'),
+  upi('upi', 'UPI'),
+  bankTransfer('bank_transfer', 'Bank Transfer');
+
+  const PaymentType(this.stored, this.label);
+
+  final String stored;
+  final String label;
+
+  /// Null for missing, empty or unrecognised values (e.g. records saved before
+  /// payment types existed). Never throws, and never guesses a type.
+  static PaymentType? fromStored(Object? value) {
+    for (final type in values) {
+      if (type.stored == value) return type;
+    }
+    return null;
+  }
+}
+
+String paymentLabel(PaymentType? type) => type?.label ?? 'Not specified';
+
+String? validatePaymentType(PaymentType? type) => type == null ? 'Select a payment type' : null;
+
 class Expense {
   const Expense({
     required this.id,
@@ -12,6 +37,7 @@ class Expense {
     required this.amountPaise,
     required this.occurredAt,
     required this.localDate,
+    this.paymentType,
     this.createdAt,
     this.pendingSync = false,
   });
@@ -21,6 +47,9 @@ class Expense {
   final int amountPaise;
   final DateTime occurredAt;
   final DayKey localDate;
+
+  /// Null on legacy records that predate payment types.
+  final PaymentType? paymentType;
 
   /// Server creation time; null until a new write reaches the server.
   final DateTime? createdAt;
@@ -37,6 +66,7 @@ class Expense {
       amountPaise: (data['amountPaise'] as num).toInt(),
       occurredAt: occurredAt,
       localDate: (data['localDate'] as num?)?.toInt() ?? dayKeyOf(occurredAt),
+      paymentType: PaymentType.fromStored(data['paymentType']),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       pendingSync: doc.metadata.hasPendingWrites,
     );
@@ -45,10 +75,16 @@ class Expense {
 
 /// What the form produces; validated before it reaches the repository.
 class ExpenseDraft {
-  const ExpenseDraft({required this.itemName, required this.amountPaise, required this.occurredAt});
+  const ExpenseDraft({
+    required this.itemName,
+    required this.amountPaise,
+    required this.occurredAt,
+    required this.paymentType,
+  });
 
   final String itemName;
   final int amountPaise;
+  final PaymentType paymentType;
 
   /// Local date-time the user picked. Its date becomes the expense's [Expense.localDate].
   final DateTime occurredAt;
@@ -58,6 +94,7 @@ class ExpenseDraft {
     'amountPaise': amountPaise,
     'occurredAt': Timestamp.fromDate(occurredAt),
     'localDate': dayKeyOf(occurredAt),
+    'paymentType': paymentType.stored,
   };
 }
 

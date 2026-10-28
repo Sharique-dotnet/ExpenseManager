@@ -139,7 +139,14 @@ class ExpenseTile extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Text(formatTime(expense.occurredAt), style: text.bodySmall),
+                        Flexible(
+                          child: Text(
+                            '${formatTime(expense.occurredAt)} · ${paymentLabel(expense.paymentType)}',
+                            style: text.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (expense.pendingSync) ...[
                           const SizedBox(width: Space.sm),
                           const Icon(Icons.cloud_upload_outlined, size: 14, color: AppColors.textSecondary),

@@ -74,6 +74,34 @@ void main() {
     });
   });
 
+  group('payment type', () {
+    test('reads stored keys and tolerates anything else', () {
+      expect(PaymentType.fromStored('cash'), PaymentType.cash);
+      expect(PaymentType.fromStored('upi'), PaymentType.upi);
+      expect(PaymentType.fromStored('bank_transfer'), PaymentType.bankTransfer);
+      for (final bad in [null, '', 'paypal', 'UPI', 'Bank Transfer', 42]) {
+        expect(PaymentType.fromStored(bad), isNull, reason: '$bad');
+      }
+    });
+
+    test('labels, with Not specified for legacy records', () {
+      expect(paymentLabel(PaymentType.bankTransfer), 'Bank Transfer');
+      expect(paymentLabel(null), 'Not specified');
+      expect(validatePaymentType(null), isNotNull);
+      expect(validatePaymentType(PaymentType.cash), isNull);
+    });
+
+    test('drafts always write a supported key', () {
+      final draft = ExpenseDraft(
+        itemName: 'Tea',
+        amountPaise: 2000,
+        occurredAt: DateTime(2026, 10, 28, 10),
+        paymentType: PaymentType.bankTransfer,
+      );
+      expect(draft.toFields()['paymentType'], 'bank_transfer');
+    });
+  });
+
   group('totals, grouping and sorting', () {
     final today = DateTime(2026, 10, 28);
     final expenses = [

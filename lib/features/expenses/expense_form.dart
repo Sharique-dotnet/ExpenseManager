@@ -49,6 +49,9 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   late final TextEditingController _amount;
   late final String _id;
   late DateTime _date;
+
+  /// Starts empty for new and legacy expenses; the user must choose.
+  PaymentType? _paymentType;
   late TimeOfDay _time;
   String? _timeNote;
   String? _saveError;
@@ -65,6 +68,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
     final now = DateTime.now();
     _name = TextEditingController(text: existing?.itemName);
     _amount = TextEditingController(text: existing == null ? '' : paiseToInput(existing.amountPaise));
+    _paymentType = existing?.paymentType;
     _id = existing?.id ?? ref.read(expenseRepositoryProvider).newId();
     if (existing != null) {
       _date = dateOfKey(existing.localDate);
@@ -123,6 +127,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
       itemName: _name.text.trim(),
       amountPaise: parsePaise(_amount.text)!,
       occurredAt: _occurredAt,
+      paymentType: _paymentType!,
     );
     final repo = ref.read(expenseRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
@@ -218,6 +223,19 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                   ),
                   validator: (v) => validateAmount(v ?? ''),
                   onFieldSubmitted: (_) => _save(),
+                ),
+                const SizedBox(height: Space.md),
+                DropdownButtonFormField<PaymentType>(
+                  initialValue: _paymentType,
+                  decoration: const InputDecoration(labelText: 'Payment type'),
+                  hint: const Text('Select'),
+                  borderRadius: BorderRadius.circular(Radii.input),
+                  dropdownColor: AppColors.white,
+                  items: [
+                    for (final type in PaymentType.values) DropdownMenuItem(value: type, child: Text(type.label)),
+                  ],
+                  onChanged: _saving ? null : (type) => setState(() => _paymentType = type),
+                  validator: validatePaymentType,
                 ),
                 const SizedBox(height: Space.md),
                 Row(

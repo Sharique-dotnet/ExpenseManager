@@ -8,22 +8,43 @@ import 'package:expense_manager/features/expenses/expense.dart';
 import 'package:expense_manager/features/expenses/expense_providers.dart';
 import 'package:expense_manager/features/expenses/expense_repository.dart';
 import 'package:expense_manager/features/expenses/today_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  late FakeFirebaseFirestore db;
   late ExpenseRepository repo;
   final today = dateOnly(DateTime.now());
   // Early-morning times so they're always "today" and never after now's date.
   DateTime todayAt(int minute) => DateTime(today.year, today.month, today.day, 0, minute);
 
-  setUp(() => repo = ExpenseRepository(FakeFirebaseFirestore(), 'u1'));
+  setUp(() {
+    db = FakeFirebaseFirestore();
+    repo = ExpenseRepository(db, 'u1');
+  });
 
-  Future<void> seed(String name, int paise, DateTime at) =>
-      repo.create(repo.newId(), ExpenseDraft(itemName: name, amountPaise: paise, occurredAt: at));
+  Future<void> seed(String name, int paise, DateTime at, {PaymentType type = PaymentType.cash}) =>
+      repo.create(repo.newId(), ExpenseDraft(itemName: name, amountPaise: paise, occurredAt: at, paymentType: type));
+
+  /// A doc as stored before payment types existed (or with a bad value), bypassing the app's writer.
+  Future<void> seedRaw(String id, String name, int paise, DateTime at, {Object? paymentType}) =>
+      db.collection('users').doc('u1').collection('expenses').doc(id).set({
+        'itemName': name,
+        'amountPaise': paise,
+        'occurredAt': Timestamp.fromDate(at),
+        'localDate': dayKeyOf(at),
+        'paymentType': ?paymentType,
+      });
+
+  Future<void> choosePayment(WidgetTester tester, String label) async {
+    await tester.tap(find.byType(DropdownButtonFormField<PaymentType>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(label).last);
+    await tester.pumpAndSettle();
+  }
 
   Future<void> pump(WidgetTester tester, Widget screen, {List<dynamic> overrides = const []}) async {
     await tester.binding.setSurfaceSize(const Size(430, 900));
@@ -133,6 +154,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Enter what you spent on'), findsOneWidget);
       expect(find.text('Enter an amount'), findsOneWidget);
+      expect(find.text('Select a payment type'), findsOneWidget);
 
       await tester.enterText(find.widgetWithText(TextFormField, 'Amount'), '0');
       await tester.pumpAndSettle();
@@ -148,6 +170,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.widgetWithText(TextFormField, 'Item'), '  Lunch ');
       await tester.enterText(find.widgetWithText(TextFormField, 'Amount'), '120.50');
+      await choosePayment(tester, 'UPI');
       await tester.tap(find.text('Save expense'));
       await tester.pumpAndSettle();
 
@@ -155,6 +178,7 @@ void main() {
       expect(find.text('Expense saved'), findsOneWidget);
       expect(find.text('Lunch'), findsOneWidget);
       expect(find.text('₹120.50'), findsOneWidget);
+      expect(find.textContaining('· UPI'), findsOneWidget);
       expect(find.text('2 expenses'), findsOneWidget);
       expect(find.text('₹140.50'), findsOneWidget);
     });
@@ -183,6 +207,46 @@ void main() {
       expect(find.text('Lunch'), findsNothing);
       expect(find.text('1 expense'), findsOneWidget);
       expect(find.text('₹25.00'), findsNWidgets(2));
+    });
+  });
+
+  group('Payment type', () {
+    testWidgets('legacy and unknown values show Not specified; totals unchanged', (tester) async {
+      await seedRaw('legacy', 'Lunch', 12000, todayAt(1));
+      await seedRaw('odd', 'Snacks', 3000, todayAt(2), paymentType: 'paypal');
+      await seed('Groceries', 35000, todayAt(3), type: PaymentType.upi);
+      await pump(tester, const TodayScreen());
+
+      expect(find.textContaining('· Not specified'), findsNWidgets(2));
+      expect(find.textContaining('· UPI'), findsOneWidget);
+      expect(find.text('₹500.00'), findsOneWidget);
+      expect(find.text('3 expenses'), findsOneWidget);
+    });
+
+    testWidgets('editing a legacy record requires a choice; cancel leaves it untouched', (tester) async {
+      await seedRaw('legacy', 'Lunch', 12000, todayAt(1));
+      final doc = db.collection('users').doc('u1').collection('expenses').doc('legacy');
+      await pump(tester, const HomeShell());
+
+      await tester.tap(find.text('Lunch'));
+      await tester.pumpAndSettle();
+      expect(find.text('Select'), findsOneWidget); // no type pre-selected
+      await tester.tap(find.text('Save changes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Select a payment type'), findsOneWidget);
+      expect(find.text('Edit expense'), findsOneWidget); // still open, nothing saved
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect((await doc.get()).data()!.containsKey('paymentType'), isFalse);
+
+      await tester.tap(find.text('Lunch'));
+      await tester.pumpAndSettle();
+      await choosePayment(tester, 'Cash');
+      await tester.tap(find.text('Save changes'));
+      await tester.pumpAndSettle();
+      expect((await doc.get()).data()!['paymentType'], 'cash');
+      expect(find.textContaining('· Cash'), findsOneWidget);
     });
   });
 
