@@ -140,22 +140,8 @@ ThemeData buildTheme() {
       elevation: 2,
       highlightElevation: 4,
       shape: CircleBorder(),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: AppColors.white,
-      surfaceTintColor: Colors.transparent,
-      indicatorColor: AppColors.mint,
-      height: 68,
-      labelTextStyle: WidgetStateProperty.resolveWith(
-        (s) => TextStyle(
-          fontSize: 12,
-          fontWeight: s.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
-          color: s.contains(WidgetState.selected) ? AppColors.mossDark : AppColors.textSecondary,
-        ),
-      ),
-      iconTheme: WidgetStateProperty.resolveWith(
-        (s) => IconThemeData(color: s.contains(WidgetState.selected) ? AppColors.mossDark : AppColors.textSecondary),
-      ),
+      iconSize: 32,
+      sizeConstraints: BoxConstraints.tightFor(width: 64, height: 64),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.background,

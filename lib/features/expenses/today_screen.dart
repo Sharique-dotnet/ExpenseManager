@@ -9,7 +9,9 @@ import 'expense_providers.dart';
 import 'expense_widgets.dart';
 
 class TodayScreen extends ConsumerWidget {
-  const TodayScreen({super.key});
+  const TodayScreen({super.key, this.messengerKey});
+
+  final GlobalKey<ScaffoldMessengerState>? messengerKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,6 +21,8 @@ class TodayScreen extends ConsumerWidget {
     return DayExpensesScaffold(
       day: dayKeyOf(today),
       totalLabel: 'Total spent today',
+      messengerKey: messengerKey,
+      addButtonInShell: true,
       header: Padding(
         padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.sm, Space.md),
         child: Column(

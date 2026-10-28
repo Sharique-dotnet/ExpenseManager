@@ -18,12 +18,19 @@ class DayExpensesScaffold extends ConsumerWidget {
     required this.header,
     required this.totalLabel,
     this.emptyTitle = 'No expenses yet.',
+    this.messengerKey,
+    this.addButtonInShell = false,
   });
 
   final DayKey day;
   final Widget header;
   final String totalLabel;
   final String emptyTitle;
+  final GlobalKey<ScaffoldMessengerState>? messengerKey;
+
+  /// True on Today, where the add button is docked in the shell's bar below
+  /// (and pokes up into the total panel) instead of floating over the list.
+  final bool addButtonInShell;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,6 +40,7 @@ class DayExpensesScaffold extends ConsumerWidget {
     // Own messenger so snackbars float above this screen's total panel,
     // not above the shell's navigation bar (where they'd cover the total).
     return ScaffoldMessenger(
+      key: messengerKey,
       child: Scaffold(
         body: SafeArea(
           bottom: false,
@@ -52,7 +60,12 @@ class DayExpensesScaffold extends ConsumerWidget {
                     : list.isEmpty
                     ? EmptyState(title: emptyTitle)
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(Space.page, Space.sm, Space.page, 96),
+                        padding: EdgeInsets.fromLTRB(
+                          Space.page,
+                          Space.sm,
+                          Space.page,
+                          addButtonInShell ? Space.lg : 96,
+                        ),
                         itemCount: list.length,
                         separatorBuilder: (_, _) => const SizedBox(height: Space.sm),
                         itemBuilder: (_, i) => ExpenseTile(expense: list[i]),
@@ -61,17 +74,21 @@ class DayExpensesScaffold extends ConsumerWidget {
             ],
           ),
         ),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            tooltip: 'Add expense',
-            onPressed: () => showExpenseForm(context, initialDate: dateOfKey(day)),
-            child: const Icon(Icons.add_rounded, size: 30),
-          ),
-        ),
+        floatingActionButton: addButtonInShell
+            ? null
+            : Builder(
+                builder: (context) => FloatingActionButton(
+                  tooltip: 'Add expense',
+                  onPressed: () => showExpenseForm(context, initialDate: dateOfKey(day)),
+                  child: const Icon(Icons.add_rounded),
+                ),
+              ),
         bottomNavigationBar: DailyTotalPanel(
           label: totalLabel,
           count: list?.length ?? 0,
           totalPaise: list == null ? null : totalPaise(list),
+          // Half the docked button plus its notch margin.
+          bottomClearance: addButtonInShell ? 40 : 0,
         ),
       ),
     );
@@ -194,10 +211,19 @@ Future<void> confirmAndDelete(BuildContext context, WidgetRef ref, Expense expen
 
 /// Pinned bottom summary: count, label and the exact INR total.
 class DailyTotalPanel extends StatelessWidget {
-  const DailyTotalPanel({super.key, required this.label, required this.count, required this.totalPaise});
+  const DailyTotalPanel({
+    super.key,
+    required this.label,
+    required this.count,
+    required this.totalPaise,
+    this.bottomClearance = 0,
+  });
 
   final String label;
   final int count;
+
+  /// Extra space below the content for a button docked over the panel's bottom edge.
+  final double bottomClearance;
 
   /// Null while loading.
   final int? totalPaise;
@@ -210,7 +236,7 @@ class DailyTotalPanel extends StatelessWidget {
         color: AppColors.mint,
         borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.card + 8)),
       ),
-      padding: const EdgeInsets.fromLTRB(Space.xl, Space.lg + 2, Space.xl, Space.lg + 2),
+      padding: EdgeInsets.fromLTRB(Space.xl, Space.lg + 2, Space.xl, Space.lg + 2 + bottomClearance),
       child: SafeArea(
         top: false,
         child: Column(

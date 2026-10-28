@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:expense_manager/app/app.dart';
 import 'package:expense_manager/app/theme.dart';
 import 'package:expense_manager/core/dates.dart';
 import 'package:expense_manager/features/calendar/calendar_screen.dart';
@@ -48,7 +49,20 @@ void main() {
       expect(find.text('0 expenses'), findsOneWidget);
       expect(find.byKey(const Key('daily-total')), findsOneWidget);
       expect(find.text('₹0.00'), findsOneWidget);
+    });
+
+    testWidgets('bottom bar: centre add button and tab switching', (tester) async {
+      await pump(tester, const HomeShell());
       expect(find.byTooltip('Add expense'), findsOneWidget);
+      expect(find.text("Today's Expenses"), findsOneWidget);
+
+      await tester.tap(find.text('Calendar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Expense Calendar'), findsOneWidget);
+
+      await tester.tap(find.text('Today'));
+      await tester.pumpAndSettle();
+      expect(find.text("Today's Expenses"), findsOneWidget);
     });
 
     testWidgets("lists only today's expenses, newest first, with the total", (tester) async {
@@ -100,11 +114,11 @@ void main() {
 
   group('Add expense form', () {
     testWidgets('opens and cancels', (tester) async {
-      await pump(tester, const TodayScreen());
+      await pump(tester, const HomeShell());
       await tester.tap(find.byTooltip('Add expense'));
       await tester.pumpAndSettle();
       expect(find.text('Add expense'), findsOneWidget);
-      expect(find.text('Today'), findsOneWidget); // date defaults to today
+      expect(find.widgetWithText(InputDecorator, 'Today'), findsOneWidget); // date defaults to today
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -112,7 +126,7 @@ void main() {
     });
 
     testWidgets('requires item and amount', (tester) async {
-      await pump(tester, const TodayScreen());
+      await pump(tester, const HomeShell());
       await tester.tap(find.byTooltip('Add expense'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save expense'));
@@ -127,7 +141,7 @@ void main() {
 
     testWidgets('primary flow: add → see it and the updated total', (tester) async {
       await seed('Tea', 2000, todayAt(1));
-      await pump(tester, const TodayScreen());
+      await pump(tester, const HomeShell());
       expect(find.text('₹20.00'), findsNWidgets(2)); // row + total
 
       await tester.tap(find.byTooltip('Add expense'));
@@ -148,7 +162,7 @@ void main() {
     testWidgets('edit and delete update the total', (tester) async {
       await seed('Tea', 2000, todayAt(1));
       await seed('Lunch', 12000, todayAt(2));
-      await pump(tester, const TodayScreen());
+      await pump(tester, const HomeShell());
 
       await tester.tap(find.text('Tea'));
       await tester.pumpAndSettle();

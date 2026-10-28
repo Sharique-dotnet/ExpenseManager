@@ -40,7 +40,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xl),
+        padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, Space.xl + 40),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(Space.xs, Space.sm, Space.xs, 0),

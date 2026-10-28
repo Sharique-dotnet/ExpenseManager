@@ -12,8 +12,14 @@ import 'expense_repository.dart';
 import 'expense_widgets.dart';
 
 /// Opens the add/edit sheet and confirms the outcome with a snackbar.
-Future<void> showExpenseForm(BuildContext context, {Expense? existing, DateTime? initialDate}) async {
-  final messenger = ScaffoldMessenger.of(context);
+/// [messenger] overrides where the confirmation appears.
+Future<void> showExpenseForm(
+  BuildContext context, {
+  Expense? existing,
+  DateTime? initialDate,
+  ScaffoldMessengerState? messenger,
+}) async {
+  messenger ??= ScaffoldMessenger.of(context);
   final message = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
