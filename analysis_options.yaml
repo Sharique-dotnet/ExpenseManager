@@ -1,0 +1,16 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - firestore-tests/**
+    - android/**
+
+formatter:
+  page_width: 120
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_final_locals: true
+    unawaited_futures: true
