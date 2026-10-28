@@ -122,6 +122,8 @@ Create an account on the sign-up screen; emulator accounts and data are wiped wh
    flutterfire configure --platforms=android --android-package-name=com.eptatechnologies.expense_manager
    ```
 
+   `flutterfire configure` also adds the `google-services` Gradle plugin and writes your project/app IDs into `firebase.json`. Discard both (`git checkout -- firebase.json android/`): the app initialises Firebase from `lib/firebase_options.dart`, so builds don't need the gitignored `google-services.json`.
+
 6. Deploy the security rules and indexes:
 
    ```bash
